@@ -191,7 +191,7 @@ We'll install the following
 ```bash
 $ curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 $ sudo apt-get update
-$ sudo apt-get install git-core curl automake autoconf libtool libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev python-software-properties libffi-dev nodejs  postgresql postgresql-contrib libpq-dev nginx
+$ sudo apt-get install git-core curl automake autoconf libtool libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev software-properties-common libffi-dev nodejs  postgresql postgresql-contrib libpq-dev nginx
 ```
 
 If any of these fails, try to install it individually first then the rest.
@@ -228,17 +228,17 @@ $ sudo nano /etc/nginx/sites-available/default
 ```
 
 ```
-upstream app {
-  server 127.0.0.1:3000;
+upstream puma {
+    server 127.0.0.1:3000;
 }
 
 server {
     listen 80;
-    server_name mydomain;
+    #server_name mydomain;
 
     root /home/myapp/app/public;
 
-    try_files $uri/index.html $uri @app;
+    try_files $uri/index.html $uri @puma;
 
     location ^~ /assets/ {
       gzip_static on;
@@ -254,10 +254,25 @@ server {
     proxy_pass http://puma;
   }
 
+
+  location /cable {
+    proxy_pass http://puma;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_redirect off;
+  }
+
     error_page 500 502 503 504 /500.html;
     client_max_body_size 4G;
     keepalive_timeout 10;
 }
+
 ```
 
 ## 5 Puma
