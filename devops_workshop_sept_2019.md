@@ -1,4 +1,4 @@
-## Server Prep
+## 1 Server Prep
 
 For the server we can use any provider as long as they provide SSH access. For the guide we using an Ubuntu 16.04 box.
 Once you retrieve your SSH key pair we use it to connect to our instance. In this case my provider (AWS) gave me a .pem file.
@@ -10,7 +10,7 @@ $ sudo su
 ```
 Now you should be logged as a `root` user.
 
-### Creating a sudoer User
+### 1.1 Creating a sudoer User
 
 We want to create a sudoer to run stuff like software updates and other things that require `sudo`. Later on we will disable the login for root user (for security reasons) and leave this user instead.
 
@@ -55,7 +55,7 @@ $ ssh -i path/to/key john@SERVER_IP
 ```
 We go back to our previous tab and go back to our root session by writing `exit` or pressing `ctrl + a + d`.
 
-### Creating an application User without sudo access
+### 1.2 Creating an application User without sudo access
 
 By adding www-data as part of the group apache can access the static files without sharing it with other users
 
@@ -73,7 +73,7 @@ $ chmod 644 .ssh/authorized_keys
 $ exit
 ```
 
-### Disabling root and changing port 22
+### 1.3 Disabling root and changing port 22
 
 Leaving root is dangerous so we'll disable it and change the default SSH port.
 ```bash
@@ -101,7 +101,7 @@ Exit and reload the daemon.
 ```bash
 $ sudo systemctl reload sshd
 ```
-### Install ufw and block/allow ports (optional)
+### 1.4 Install ufw and block/allow ports (optional)
 
 
 Usually Ubuntu ships with ufw, otherwise install it. You may skip this step if your hosting provider already has a firewall service (like AWS' security groups)
@@ -120,7 +120,7 @@ $ ufw deny 22 && ufw allow 333 && ufw logging off && ufw enable && ufw status
 
 It's important to only open ports for services we're currently using and nothing else.
 
-### Handshake with Github and Bitbucket
+### 1.5 Handshake with Github and Bitbucket
 
 Log in as `myapp` user for the next few steps.
 
@@ -132,7 +132,7 @@ $ ssh -T git@github.com
 $ ssh -T git@bitbucket.org
 ```
 
-### Create pub key and add it to Github
+### 1.6 Create pub key and add it to Github
 
 Generate a key
 ```bash
@@ -140,9 +140,9 @@ $ ssh-keygen -t rsa
 ```
 Now add the keys as a deployment key to your repo, instructions for [Github](https://developer.github.com/guides/managing-deploy-keys/) and [Bitbucket](https://confluence.atlassian.com/display/BITBUCKET/Use+deployment+keys).
 
-## Dependencies installation
+## 2 Dependencies installation
 
-### Ruby (with rbenv)
+### 2.1 Ruby (with rbenv)
 
 We'll use rbenv to handle our ruby instllation and versions.
 
@@ -179,7 +179,7 @@ We finish off installing bundler
 $ gem install bundler
 ```
 
-### Installing Rails (its dependencies)
+### 2.2 Installing Rails (its dependencies)
 
 Login as `john`
 
@@ -196,7 +196,7 @@ $ sudo apt-get install git-core curl automake autoconf libtool libssl-dev librea
 
 If any of these fails, try to install it individually first then the rest.
 
-### Creating a user for PostgreSQL
+### 2.3 Creating a user for PostgreSQL
 You might skip this step if your DB is in another server/service like AWS RDS
 
 Setup postgres user for the app
@@ -209,7 +209,7 @@ exit
 
 The password you type in here will be the one to put in your my_app/current/config/database.yml later when you deploy your app for the first time.
 
-## Cloning the app
+## 3 Cloning the app
 
 Log in as `myapp` and clone your app so we can install the gems.
 ```bash
@@ -220,9 +220,9 @@ $ bundler install
 ```
 You might encounter some errors while trying to install your gems, chances are you might need to log in as `john` again and install some dependencies, remember that this user cannot use `sudo`.
 
-## Nginx
+## 4 Nginx
 Log in as john
-### Basic configuration
+### 4.1 Basic configuration
 ```bash
 $ sudo nano /etc/nginx/sites-available/default
 ```
@@ -260,13 +260,13 @@ server {
 }
 ```
 
-## Puma
+## 5 Puma
 First we need to check how many cores we have in our server with this comand
 ```bash
 $ grep -c processor /proc/cpuinfo
 ```
 In our local project we open `config/puma.rb`
-### Setting up Puma
+### 5.1 Setting up Puma
 This is a basic configuraiton for puma
 ```ruby
 # Change to match your CPU core count
@@ -301,7 +301,7 @@ end
 
 Commit these changes and push them to your repository.
 
-## Deployment scripts
+## 6 Deployment scripts
 This script will be in the home directory for the user.
 ```bash
 #loggged in as myapp
