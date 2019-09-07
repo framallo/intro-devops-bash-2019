@@ -55,25 +55,7 @@ $ ssh -i path/to/key john@SERVER_IP
 ```
 We go back to our previous tab and go back to our root session by writing `exit` or pressing `ctrl + a + d`.
 
-### 1.2 Creating an application User without sudo access
-
-By adding www-data as part of the group apache can access the static files without sharing it with other users
-
-```bash
-# as root
-$ adduser myapp --disabled-password
-$ adduser www-data myapp
-$ sudo chmod  750 /home/myapp/
-$ su myapp
-$ cd
-$ mkdir .ssh
-$ touch  .ssh/authorized_keys
-$ chmod 700 .ssh
-$ chmod 644 .ssh/authorized_keys
-$ exit
-```
-
-### 1.3 Disabling root and changing port 22
+### 1.2 Disabling root and changing port 22
 
 Leaving root is dangerous so we'll disable it and change the default SSH port.
 ```bash
@@ -101,7 +83,7 @@ Exit and reload the daemon.
 ```bash
 $ sudo systemctl reload sshd
 ```
-### 1.4 Install ufw and block/allow ports (optional)
+### 1.3 Install ufw and block/allow ports (optional)
 
 
 Usually Ubuntu ships with ufw, otherwise install it. You may skip this step if your hosting provider already has a firewall service (like AWS' security groups)
@@ -119,6 +101,24 @@ $ ufw deny 22 && ufw allow 333 && ufw logging off && ufw enable && ufw status
 ```
 
 It's important to only open ports for services we're currently using and nothing else.
+
+### 1.4 Creating an application User without sudo access
+
+By adding www-data as part of the group apache can access the static files without sharing it with other users
+
+```bash
+# as root
+$ adduser myapp --disabled-password
+$ adduser www-data myapp
+$ sudo chmod  750 /home/myapp/
+$ su myapp
+$ cd
+$ mkdir .ssh
+$ touch  .ssh/authorized_keys
+$ chmod 700 .ssh
+$ chmod 644 .ssh/authorized_keys
+$ exit
+```
 
 ### 1.5 Handshake with Github and Bitbucket
 
@@ -338,6 +338,7 @@ bundle exec puma -C config/puma.rb -d -p "$RAILS_PORT"
 
 echo "deployment completed"
 ```
+### 6.1 Environment variables
 We place our environment variables in a `.env` file called `.env.local`
 ```bash
 #logged as myapp
@@ -353,7 +354,7 @@ export DB_PASSWORD=DB_PASSWORD
 export RAILS_MAX_THREADS=5
 export SECRET_KEY_BASE=SECRET_FOR_PROD
 ```
-
+### 6.2 Run it!
 To deploy the app we run this script through SSH
 ```bash
 $ ssh myapp@MY_SERVER -p 333 /bin/bash -l deploy.sh
